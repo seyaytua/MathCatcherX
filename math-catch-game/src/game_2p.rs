@@ -40,6 +40,18 @@ impl Player {
             return;
         }
 
+        // Check if any correct numbers exist on screen
+        let has_correct_numbers = self.numbers.iter().any(|n| n.is_correct);
+        
+        // If no correct numbers on screen, auto-skip to next problem
+        if !has_correct_numbers {
+            self.problem = Self::random_problem();
+            self.numbers = NumberObject::generate_in_grid(&self.problem, width, height);
+            // Small HP penalty for impossible problem
+            self.hp = (self.hp - 5.0).max(0.0);
+            return;
+        }
+        
         // Check if all correct numbers are collected
         let all_correct_collected = self.numbers.iter()
             .filter(|n| n.is_correct)
