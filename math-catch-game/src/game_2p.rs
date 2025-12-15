@@ -250,7 +250,10 @@ impl Game2P {
         }
         self.context.stroke();
 
-        // Draw numbers
+        // Draw numbers with appropriate sizing
+        let circle_radius = (width / 12.0).min(height / 10.0).min(35.0); // Dynamic sizing
+        let font_size = (circle_radius * 0.7).max(14.0); // Font scales with circle
+        
         for number in &player.numbers {
             let adjusted_x = number.x;
             let adjusted_y = number.y + y_offset;
@@ -259,17 +262,18 @@ impl Game2P {
                 // Draw circle
                 self.context.set_fill_style(&JsValue::from_str("#0969da"));
                 self.context.begin_path();
-                self.context.arc(adjusted_x, adjusted_y, number.radius, 0.0, 2.0 * std::f64::consts::PI)?;
+                self.context.arc(adjusted_x, adjusted_y, circle_radius, 0.0, 2.0 * std::f64::consts::PI)?;
                 self.context.fill();
                 
                 // Draw border
                 self.context.set_stroke_style(&JsValue::from_str("#1a1a1a"));
-                self.context.set_line_width(3.0);
+                self.context.set_line_width(2.0);
                 self.context.stroke();
                 
                 // Draw text
                 self.context.set_fill_style(&JsValue::from_str("#ffffff"));
-                self.context.set_font("bold 20px Arial");
+                let font = format!("bold {}px Arial", font_size as i32);
+                self.context.set_font(&font);
                 self.context.set_text_align("center");
                 self.context.set_text_baseline("middle");
                 let text = format!("{}", number.value);
@@ -277,17 +281,13 @@ impl Game2P {
             }
         }
 
-        // Draw player info
+        // Draw compact player info
         self.context.set_fill_style(&JsValue::from_str("#1a1a1a"));
-        self.context.set_font("bold 16px Arial");
+        self.context.set_font("bold 12px Arial");
         self.context.set_text_align("left");
-        self.context.fill_text(label, 10.0, y_offset + 20.0)?;
         
-        let score_text = format!("Score: {}", player.score);
-        self.context.fill_text(&score_text, 10.0, y_offset + 40.0)?;
-        
-        let hp_text = format!("HP: {:.0}", player.hp);
-        self.context.fill_text(&hp_text, 10.0, y_offset + 60.0)?;
+        let info_text = format!("{} | Score:{} HP:{:.0}", label, player.score, player.hp);
+        self.context.fill_text(&info_text, 5.0, y_offset + 12.0)?;
 
         Ok(())
     }
