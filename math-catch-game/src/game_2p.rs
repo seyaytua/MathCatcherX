@@ -250,9 +250,18 @@ impl Game2P {
         }
         self.context.stroke();
 
-        // Draw numbers with appropriate sizing
-        let circle_radius = (width / 12.0).min(height / 10.0).min(35.0); // Dynamic sizing
-        let font_size = (circle_radius * 0.7).max(14.0); // Font scales with circle
+        // IMPORTANT: In 2P mode, we don't draw from NumberObject - we draw manually
+        // This is because each player's numbers need to be positioned with y_offset
+        // So we calculate circle_radius here but DON'T use NumberObject.radius
+        // Instead, we should use the same radius that was calculated when generating numbers
+        
+        // Get the radius from the first number (they all have the same radius)
+        let circle_radius = if !player.numbers.is_empty() {
+            player.numbers[0].radius
+        } else {
+            20.0 // Fallback
+        };
+        let font_size = (circle_radius * 0.55).max(10.0); // Match the font calculation in NumberObject
         
         for number in &player.numbers {
             let adjusted_x = number.x;

@@ -54,9 +54,9 @@ impl NumberObject {
         context.set_line_width(3.0);
         context.stroke();
 
-        // Draw number text with dynamic font size
+        // Draw number text with dynamic font size (more conservative sizing)
         context.set_fill_style(&JsValue::from_str("#ffffff"));
-        let font_size = (self.radius * 0.6).max(12.0);
+        let font_size = (self.radius * 0.55).max(10.0); // Reduced from 0.6 to 0.55, min from 12 to 10
         let font = format!("bold {}px Arial", font_size as i32);
         context.set_font(&font);
         context.set_text_align("center");
@@ -78,8 +78,11 @@ impl NumberObject {
         let cell_height = height / rows as f64;
         let start_y = 0.0;
         
-        // Calculate appropriate radius based on cell size
-        let max_radius = (cell_width.min(cell_height) / 2.5).min(40.0);
+        // Calculate appropriate radius based on cell size with better scaling
+        // Use a larger divisor (3.5) to ensure numbers don't overlap and fit comfortably
+        // Also, scale max radius based on screen size (smaller screens = smaller radius cap)
+        let base_radius = cell_width.min(cell_height) / 3.5;
+        let max_radius = base_radius.min(width / 20.0).min(35.0); // Cap based on width too
         
         // Collect all numbers to display (correct + incorrect)
         let mut all_values = Vec::new();
