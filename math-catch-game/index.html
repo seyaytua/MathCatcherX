@@ -2,69 +2,131 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数学キャッチゲーム - Math Catch Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>数学キャッチゲーム</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🎮 数学キャッチゲーム</h1>
-            <p class="subtitle">Math Catch Game - Powered by Rust + WebAssembly</p>
-        </header>
-
-        <div class="game-container">
-            <div class="game-info">
-                <div class="info-item">
-                    <span class="label">HP:</span>
-                    <span id="hp" class="value hp-value">100</span><span class="unit">%</span>
+    <!-- Main Game Screen -->
+    <div class="game-screen">
+        <!-- Game Header -->
+        <div class="game-header">
+            <button id="helpButton" class="icon-btn">❓</button>
+            <div class="game-stats">
+                <div class="stat-item">
+                    <span class="stat-label">HP</span>
+                    <span id="hp" class="stat-value hp-value">100</span>
                 </div>
-                <div class="info-item">
-                    <span class="label">スコア:</span>
-                    <span id="score" class="value">0</span>
+                <div class="stat-item">
+                    <span class="stat-label">スコア</span>
+                    <span id="score" class="stat-value">0</span>
                 </div>
-                <div class="info-item">
-                    <span class="label">残り時間:</span>
-                    <span id="time" class="value">60</span><span class="unit">s</span>
+                <div class="stat-item">
+                    <span class="stat-label">時間</span>
+                    <span id="time" class="stat-value">60</span>
                 </div>
             </div>
+            <button id="modeButton" class="icon-btn">⚙️</button>
+        </div>
 
-            <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <!-- Canvas Game Area -->
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
 
-            <div class="controls">
-                <button id="startButton" class="btn btn-primary">ゲーム開始</button>
-                <button id="skipButton" class="btn btn-skip" style="display: none;">問題をスキップ (-10 HP)</button>
-                <button id="restartButton" class="btn btn-secondary" style="display: none;">もう一度</button>
+        <!-- Game Controls -->
+        <div class="game-controls">
+            <button id="startButton" class="btn btn-primary btn-large">🎮 ゲーム開始</button>
+            <button id="skipButton" class="btn btn-skip" style="display: none;">⏭️ スキップ (-10 HP)</button>
+            <button id="restartButton" class="btn btn-secondary btn-large" style="display: none;">🔄 もう一度</button>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎯 遊び方</h2>
+                <button id="closeHelp" class="close-btn">✕</button>
             </div>
+            <div class="modal-body">
+                <h3>📱 操作方法</h3>
+                <p>正解だと思う数字をタップ/クリック！</p>
 
-            <div class="instructions">
-                <h3>🎯 遊び方</h3>
-                <div class="game-rules">
-                    <ul>
-                        <li>🔢 <strong>6種類の数学問題</strong>が出題されます！</li>
-                        <li>📱 <strong>操作:</strong> 正解だと思う数字をクリック/タップ！</li>
-                        <li>🧮 <strong>問題タイプ:</strong></li>
-                        <ul class="problem-types">
-                            <li><strong>約数:</strong> その数を割り切れる数</li>
-                            <li><strong>倍数:</strong> その数を掛け算した数</li>
-                            <li><strong>素数:</strong> 1とその数自身でしか割り切れない数</li>
-                            <li><strong>GCD:</strong> 2つの数の最大公約数</li>
-                            <li><strong>LCM:</strong> 2つの数の最小公倍数</li>
-                            <li><strong>合同式:</strong> 割った余りが同じになる数</li>
-                        </ul>
-                        <li>💚 <strong>正解:</strong> +100点</li>
-                        <li>💔 <strong>不正解:</strong> -20 HP（0になるとゲームオーバー）</li>
-                        <li>🎁 <strong>全問正解:</strong> +200点のボーナス + HP回復(+30)</li>
-                        <li>⏭️ <strong>スキップ:</strong> 答えがない時は「スキップ」ボタン (-10 HP)</li>
-                        <li>⏱️ <strong>制限時間:</strong> 60秒</li>
-                    </ul>
+                <h3>🧮 問題タイプ</h3>
+                <ul class="problem-types-list">
+                    <li><strong>約数:</strong> その数を割り切れる数</li>
+                    <li><strong>倍数:</strong> その数を掛け算した数</li>
+                    <li><strong>素数:</strong> 1とその数自身でしか割り切れない数</li>
+                    <li><strong>GCD:</strong> 2つの数の最大公約数</li>
+                    <li><strong>LCM:</strong> 2つの数の最小公倍数</li>
+                    <li><strong>合同式:</strong> 割った余りが同じになる数</li>
+                </ul>
+
+                <h3>💯 スコアリング</h3>
+                <ul>
+                    <li>✅ <strong>正解:</strong> +100点</li>
+                    <li>❌ <strong>不正解:</strong> -20 HP</li>
+                    <li>🎁 <strong>全問正解:</strong> +200点 + HP回復(+30)</li>
+                    <li>⏭️ <strong>スキップ:</strong> -10 HP</li>
+                </ul>
+
+                <h3>⏱️ ゲームルール</h3>
+                <p>制限時間は60秒。HPが0になるとゲームオーバー！</p>
+            </div>
+            <div class="modal-footer">
+                <button id="closeHelpFooter" class="btn btn-primary btn-large">わかった！</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mode Selection Modal -->
+    <div id="modeModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ ゲームモード</h2>
+                <button id="closeMode" class="close-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="mode-grid">
+                    <button class="mode-card mode-active" data-mode="solo">
+                        <div class="mode-icon">🎮</div>
+                        <div class="mode-title">ソロプレイ</div>
+                        <div class="mode-desc">1人で練習</div>
+                    </button>
+                    <button class="mode-card mode-locked" data-mode="local2p">
+                        <div class="mode-icon">👥</div>
+                        <div class="mode-title">ローカル2P</div>
+                        <div class="mode-desc">画面分割対戦</div>
+                        <div class="mode-badge">近日公開</div>
+                    </button>
+                    <button class="mode-card mode-locked" data-mode="minigame">
+                        <div class="mode-icon">🎲</div>
+                        <div class="mode-title">ミニゲーム</div>
+                        <div class="mode-desc">特殊ルール</div>
+                        <div class="mode-badge">近日公開</div>
+                    </button>
+                    <button class="mode-card mode-locked" data-mode="gacha">
+                        <div class="mode-icon">🎰</div>
+                        <div class="mode-title">ガチャ</div>
+                        <div class="mode-desc">アイテム収集</div>
+                        <div class="mode-badge">近日公開</div>
+                    </button>
+                    <button class="mode-card mode-locked" data-mode="customize">
+                        <div class="mode-icon">🎨</div>
+                        <div class="mode-title">カスタマイズ</div>
+                        <div class="mode-desc">見た目変更</div>
+                        <div class="mode-badge">近日公開</div>
+                    </button>
+                    <button class="mode-card mode-locked" data-mode="online">
+                        <div class="mode-icon">🌐</div>
+                        <div class="mode-title">オンライン対戦</div>
+                        <div class="mode-desc">世界中と対戦</div>
+                        <div class="mode-badge">近日公開</div>
+                    </button>
                 </div>
             </div>
         </div>
-
-        <footer>
-            <p>Rust + WebAssembly で実装された数学学習ゲーム</p>
-        </footer>
     </div>
 
     <script type="module" src="./app.js"></script>
