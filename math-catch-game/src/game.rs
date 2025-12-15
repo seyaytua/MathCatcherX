@@ -1,8 +1,8 @@
 use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, window};
-use std::f64::consts::PI;
 use crate::number::NumberObject;
 use crate::math_problem::{MathProblem, ProblemType};
+use rand::Rng;
 
 pub struct Game {
     canvas: HtmlCanvasElement,
@@ -22,8 +22,8 @@ impl Game {
         let width = canvas.width() as f64;
         let height = canvas.height() as f64;
         
-        // Always use divisors problem
-        let problem = MathProblem::new(ProblemType::Divisors);
+        // Random problem type
+        let problem = Self::random_problem();
         let numbers = NumberObject::generate_in_grid(&problem, width, height);
         
         Ok(Game {
@@ -84,7 +84,7 @@ impl Game {
             // Generate new problem
             let width = self.canvas.width() as f64;
             let height = self.canvas.height() as f64;
-            self.problem = MathProblem::new(ProblemType::Divisors);
+            self.problem = Self::random_problem();
             self.numbers = NumberObject::generate_in_grid(&self.problem, width, height);
             self.score += 200; // Bonus for completing problem
             
@@ -141,13 +141,35 @@ impl Game {
     }
 
     fn draw_ui(&self, width: f64, height: f64) -> Result<(), JsValue> {
-        // Draw large target number in center top
+        // Draw large target number in center top (if applicable)
         self.context.set_fill_style(&JsValue::from_str("#ffffff"));
         self.context.set_font("bold 72px Arial");
         self.context.set_text_align("center");
         self.context.set_text_baseline("top");
-        let target_text = format!("{}", self.problem.target_number);
-        self.context.fill_text(&target_text, width / 2.0, 20.0)?;
+        
+        // For primes, show nothing; for modular, show "mod X ≡ Y"
+        let target_text = match self.problem.problem_type {
+            ProblemType::Primes => String::new(),
+            ProblemType::Modular => {
+                if self.problem.numbers.len() >= 2 {
+                    format!("mod {} ≡ {}", self.problem.numbers[0], self.problem.numbers[1])
+                } else {
+                    String::new()
+                }
+            },
+            ProblemType::Gcd | ProblemType::Lcm => {
+                if self.problem.numbers.len() >= 2 {
+                    format!("{} & {}", self.problem.numbers[0], self.problem.numbers[1])
+                } else {
+                    format!("{}", self.problem.target_number)
+                }
+            },
+            _ => format!("{}", self.problem.target_number),
+        };
+        
+        if !target_text.is_empty() {
+            self.context.fill_text(&target_text, width / 2.0, 20.0)?;
+        }
 
         // Draw problem description below the number
         self.context.set_font("bold 20px Arial");
@@ -261,5 +283,19 @@ impl Game {
 
     pub fn is_game_over(&self) -> bool {
         self.game_over
+    }
+
+    fn random_problem() -> MathProblem {
+        let mut rng = rand::thread_rng();
+        let problem_types = [
+            ProblemType::Divisors,
+            ProblemType::Multiples,
+            ProblemType::Primes,
+            ProblemType::Gcd,
+            ProblemType::Lcm,
+            ProblemType::Modular,
+        ];
+        let problem_type = problem_types[rng.gen_range(0..problem_types.len())];
+        MathProblem::new(problem_type)
     }
 }

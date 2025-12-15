@@ -6,6 +6,8 @@ pub enum ProblemType {
     Lcm,
     Divisors,
     Primes,
+    Multiples,
+    Modular,
 }
 
 pub struct MathProblem {
@@ -17,12 +19,20 @@ pub struct MathProblem {
 }
 
 impl MathProblem {
+    pub fn get_problem_type(&self) -> ProblemType {
+        self.problem_type
+    }
+}
+
+impl MathProblem {
     pub fn new(problem_type: ProblemType) -> Self {
         match problem_type {
             ProblemType::Gcd => Self::generate_gcd_problem(),
             ProblemType::Lcm => Self::generate_lcm_problem(),
             ProblemType::Divisors => Self::generate_divisors_problem(),
             ProblemType::Primes => Self::generate_primes_problem(),
+            ProblemType::Multiples => Self::generate_multiples_problem(),
+            ProblemType::Modular => Self::generate_modular_problem(),
         }
     }
 
@@ -93,6 +103,57 @@ impl MathProblem {
             correct_answers: primes.iter().filter(|&&p| p < 50).cloned().collect(),
             description,
             target_number: 0,
+        }
+    }
+
+    fn generate_multiples_problem() -> Self {
+        let mut rng = rand::thread_rng();
+        
+        // Choose a base number (2-7)
+        let base = rng.gen_range(2..8);
+        
+        // Generate multiples up to 50
+        let mut multiples = Vec::new();
+        let mut i = 1;
+        while base * i <= 50 {
+            multiples.push(base * i);
+            i += 1;
+        }
+        
+        let description = format!("{}の倍数を全て見つけよう", base);
+        
+        MathProblem {
+            problem_type: ProblemType::Multiples,
+            numbers: vec![base],
+            correct_answers: multiples,
+            description,
+            target_number: base,
+        }
+    }
+
+    fn generate_modular_problem() -> Self {
+        let mut rng = rand::thread_rng();
+        
+        // Choose modulus (3-7) and remainder (0 to modulus-1)
+        let modulus = rng.gen_range(3..8);
+        let remainder = rng.gen_range(0..modulus);
+        
+        // Find all numbers from 1 to 50 that satisfy: n ≡ remainder (mod modulus)
+        let mut congruent_numbers = Vec::new();
+        for n in 1..=50 {
+            if n % modulus == remainder {
+                congruent_numbers.push(n);
+            }
+        }
+        
+        let description = format!("mod {} で {} と合同な数を全て見つけよう", modulus, remainder);
+        
+        MathProblem {
+            problem_type: ProblemType::Modular,
+            numbers: vec![modulus, remainder],
+            correct_answers: congruent_numbers,
+            description,
+            target_number: remainder,
         }
     }
 
