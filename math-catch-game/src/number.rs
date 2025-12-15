@@ -78,11 +78,16 @@ impl NumberObject {
         let cell_height = height / rows as f64;
         let start_y = 0.0;
         
-        // Calculate appropriate radius based on cell size with better scaling
-        // Use a larger divisor (3.5) to ensure numbers don't overlap and fit comfortably
-        // Also, scale max radius based on screen size (smaller screens = smaller radius cap)
-        let base_radius = cell_width.min(cell_height) / 3.5;
-        let max_radius = base_radius.min(width / 20.0).min(35.0); // Cap based on width too
+        // Calculate appropriate radius based on cell size with much better scaling
+        // Use divisor of 5.0 (increased from 3.5) to ensure numbers fit well in cells
+        // Target: circle should take up ~40% of cell size (diameter = 80% of smaller dimension)
+        let base_radius = cell_width.min(cell_height) / 5.0;
+        // Cap at 25px (reduced from 35px) for better fit on all screens
+        let max_radius = base_radius.min(25.0);
+        
+        // Debug: Log the calculated values
+        web_sys::console::log_1(&format!("Grid: width={}, height={}, cell={}x{}, base_radius={}, max_radius={}", 
+            width, height, cell_width, cell_height, base_radius, max_radius).into());
         
         // Collect all numbers to display (correct + incorrect)
         let mut all_values = Vec::new();
