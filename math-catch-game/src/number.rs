@@ -60,8 +60,8 @@ impl NumberObject {
         let cols = 5;
         let rows = 4;
         let cell_width = width / cols as f64;
-        let cell_height = (height - 150.0) / rows as f64; // Leave more space for UI at top
-        let start_y = 150.0;
+        let cell_height = height / rows as f64;
+        let start_y = 0.0;
         
         // Collect all numbers to display (correct + incorrect)
         let mut all_values = Vec::new();

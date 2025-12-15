@@ -141,88 +141,43 @@ impl Game {
     }
 
     fn draw_ui(&self, width: f64, height: f64) -> Result<(), JsValue> {
-        // Draw large target number in center top (if applicable)
+        // Draw problem info at top center of canvas
         self.context.set_fill_style(&JsValue::from_str("#1a1a1a"));
         self.context.set_text_align("center");
         self.context.set_text_baseline("top");
         
-        // For primes, show nothing; for modular, show "mod X ≡ Y"
+        // Draw target number/expression
         let (target_text, font_size) = match self.problem.problem_type {
-            ProblemType::Primes => (String::new(), 72),
+            ProblemType::Primes => (String::new(), 48),
             ProblemType::Modular => {
                 if self.problem.numbers.len() >= 2 {
-                    (format!("mod {} ≡ {}", self.problem.numbers[0], self.problem.numbers[1]), 48)
+                    (format!("mod {} ≡ {}", self.problem.numbers[0], self.problem.numbers[1]), 32)
                 } else {
-                    (String::new(), 72)
+                    (String::new(), 48)
                 }
             },
             ProblemType::Gcd | ProblemType::Lcm => {
                 if self.problem.numbers.len() >= 2 {
-                    (format!("{} & {}", self.problem.numbers[0], self.problem.numbers[1]), 56)
+                    (format!("{} & {}", self.problem.numbers[0], self.problem.numbers[1]), 40)
                 } else {
-                    (format!("{}", self.problem.target_number), 72)
+                    (format!("{}", self.problem.target_number), 48)
                 }
             },
-            _ => (format!("{}", self.problem.target_number), 72),
+            _ => (format!("{}", self.problem.target_number), 48),
         };
         
         if !target_text.is_empty() {
             let font = format!("bold {}px Arial", font_size);
             self.context.set_font(&font);
-            self.context.fill_text(&target_text, width / 2.0, 20.0)?;
+            self.context.fill_text(&target_text, width / 2.0, 10.0)?;
         }
 
-        // Draw problem description below the number
-        self.context.set_fill_style(&JsValue::from_str("#1a1a1a"));
-        self.context.set_font("bold 20px Arial");
+        // Draw problem description
+        self.context.set_fill_style(&JsValue::from_str("#586069"));
+        self.context.set_font("14px Arial");
         self.context.set_text_align("center");
         let problem_text = self.problem.get_description();
-        self.context.fill_text(&problem_text, width / 2.0, 105.0)?;
-
-        // Draw score (left side)
-        self.context.set_fill_style(&JsValue::from_str("#1a1a1a"));
-        self.context.set_text_align("left");
-        self.context.set_font("bold 20px Arial");
-        let score_text = format!("Score: {}", self.score);
-        self.context.fill_text(&score_text, 10.0, 20.0)?;
-
-        // Draw time (left side)
-        let time_text = format!("Time: {:.1}s", self.time_remaining);
-        self.context.fill_text(&time_text, 10.0, 50.0)?;
-
-        // Draw HP bar (right side)
-        let hp_bar_width = 150.0;
-        let hp_bar_height = 20.0;
-        let hp_bar_x = width - hp_bar_width - 10.0;
-        let hp_bar_y = 20.0;
-        
-        // HP bar background
-        self.context.set_fill_style(&JsValue::from_str("#e1e4e8"));
-        self.context.fill_rect(hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height);
-        
-        // HP bar fill with high contrast colors
-        let hp_percentage = self.hp / self.max_hp;
-        let hp_color = if hp_percentage > 0.6 {
-            "#22863a"
-        } else if hp_percentage > 0.3 {
-            "#d29922"
-        } else {
-            "#d73a49"
-        };
-        self.context.set_fill_style(&JsValue::from_str(hp_color));
-        self.context.fill_rect(hp_bar_x, hp_bar_y, hp_bar_width * hp_percentage, hp_bar_height);
-        
-        // HP bar border
-        self.context.set_stroke_style(&JsValue::from_str("#1a1a1a"));
-        self.context.set_line_width(2.0);
-        self.context.stroke_rect(hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height);
-        
-        // HP text
-        self.context.set_fill_style(&JsValue::from_str("#ffffff"));
-        self.context.set_font("bold 14px Arial");
-        self.context.set_text_align("center");
-        let hp_text = format!("HP: {:.0}%", (self.hp / self.max_hp * 100.0));
-        self.context.fill_text(&hp_text, hp_bar_x + hp_bar_width / 2.0, hp_bar_y + 15.0)?;
+        self.context.fill_text(&problem_text, width / 2.0, if !target_text.is_empty() { 65.0 } else { 20.0 })?;
 
         // Draw game over
         if self.game_over {
