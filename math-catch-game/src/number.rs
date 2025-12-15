@@ -14,6 +14,19 @@ pub struct NumberObject {
 }
 
 impl NumberObject {
+    pub fn new_with_radius(x: f64, y: f64, value: u32, is_correct: bool, radius: f64) -> Self {
+        NumberObject {
+            x,
+            y,
+            value,
+            radius,
+            is_correct,
+            collected: false,
+        }
+    }
+}
+
+impl NumberObject {
     pub fn new(x: f64, y: f64, value: u32, is_correct: bool) -> Self {
         NumberObject {
             x,
@@ -30,20 +43,22 @@ impl NumberObject {
             return Ok(()); // Don't draw collected numbers
         }
 
-        // Draw number circle (same color for all)
-        context.set_fill_style(&JsValue::from_str("#667eea")); // Purple color for all
+        // Draw number circle (high contrast blue for all)
+        context.set_fill_style(&JsValue::from_str("#0969da")); // High contrast blue
         context.begin_path();
         context.arc(self.x, self.y, self.radius, 0.0, 2.0 * PI)?;
         context.fill();
 
-        // Draw border
-        context.set_stroke_style(&JsValue::from_str("#ffffff"));
+        // Draw border with high contrast
+        context.set_stroke_style(&JsValue::from_str("#1a1a1a"));
         context.set_line_width(3.0);
         context.stroke();
 
-        // Draw number text
+        // Draw number text with dynamic font size for good readability
         context.set_fill_style(&JsValue::from_str("#ffffff"));
-        context.set_font("bold 24px Arial");
+        let font_size = (self.radius * 0.60).max(12.0); // Good ratio: 0.60, min 12px
+        let font = format!("bold {}px Arial", font_size as i32);
+        context.set_font(&font);
         context.set_text_align("center");
         context.set_text_baseline("middle");
         let text = format!("{}", self.value);
@@ -56,12 +71,23 @@ impl NumberObject {
         let mut numbers = Vec::new();
         let mut rng = rand::thread_rng();
         
-        // Calculate grid layout
+        // Calculate grid layout - use 3 rows for 2P mode (when height is small)
         let cols = 5;
-        let rows = 4;
+        let rows = if height < 350.0 { 3 } else { 4 }; // 3 rows for 2P split screen
         let cell_width = width / cols as f64;
-        let cell_height = (height - 150.0) / rows as f64; // Leave more space for UI at top
-        let start_y = 150.0;
+        let cell_height = height / rows as f64;
+        let start_y = 0.0;
+        
+        // Calculate appropriate radius - larger for better visibility
+        // Use divisor of 4.0 for good visibility 
+        // Target: circle diameter should be ~50% of cell size for readability
+        let base_radius = cell_width.min(cell_height) / 4.0;
+        // Cap at 32px for good visibility
+        let max_radius = base_radius.min(32.0);
+        
+        // Debug: Log the calculated values
+        web_sys::console::log_1(&format!("Grid: width={}, height={}, cell={}x{}, base_radius={:.1}, max_radius={:.1}", 
+            width, height, cell_width, cell_height, base_radius, max_radius).into());
         
         // Collect all numbers to display (correct + incorrect)
         let mut all_values = Vec::new();
@@ -87,7 +113,12 @@ impl NumberObject {
         use rand::seq::SliceRandom;
         all_values.shuffle(&mut rng);
         
-        // Place numbers in grid
+        // Count correct answers
+        let correct_count = all_values.iter().filter(|(_, is_correct)| *is_correct).count();
+        web_sys::console::log_1(&format!("📋 Generated {} numbers ({} correct, {} incorrect)", 
+            all_values.len(), correct_count, all_values.len() - correct_count).into());
+        
+        // Place numbers in grid with calculated radius
         for (i, (value, is_correct)) in all_values.iter().enumerate().take(cols * rows) {
             let col = i % cols;
             let row = i / cols;
@@ -95,7 +126,7 @@ impl NumberObject {
             let x = (col as f64 + 0.5) * cell_width;
             let y = start_y + (row as f64 + 0.5) * cell_height;
             
-            numbers.push(NumberObject::new(x, y, *value, *is_correct));
+            numbers.push(NumberObject::new_with_radius(x, y, *value, *is_correct, max_radius));
         }
         
         numbers

@@ -75,12 +75,35 @@ impl Game {
             return;
         }
 
+        // Check if any correct numbers exist on screen
+        let has_correct_numbers = self.numbers.iter().any(|n| n.is_correct);
+        
+        // If no correct numbers on screen, auto-skip to next problem
+        if !has_correct_numbers {
+            let width = self.canvas.width() as f64;
+            let height = self.canvas.height() as f64;
+            self.problem = Self::random_problem();
+            self.numbers = NumberObject::generate_in_grid(&self.problem, width, height);
+            // Small HP penalty for impossible problem
+            self.hp = (self.hp - 5.0).max(0.0);
+            return;
+        }
+        
         // Check if all correct numbers are collected
-        let all_correct_collected = self.numbers.iter()
+        let correct_numbers: Vec<_> = self.numbers.iter()
             .filter(|n| n.is_correct)
-            .all(|n| n.collected);
+            .collect();
+        
+        let collected_count = correct_numbers.iter().filter(|n| n.collected).count();
+        let total_correct = correct_numbers.len();
+        
+        // Debug log
+        web_sys::console::log_1(&format!("Collected {}/{} correct numbers", collected_count, total_correct).into());
+        
+        let all_correct_collected = total_correct > 0 && collected_count == total_correct;
 
         if all_correct_collected {
+            web_sys::console::log_1(&"🎉 All correct! Generating new problem...".into());
             // Generate new problem
             let width = self.canvas.width() as f64;
             let height = self.canvas.height() as f64;
@@ -97,8 +120,8 @@ impl Game {
         let width = self.canvas.width() as f64;
         let height = self.canvas.height() as f64;
 
-        // Clear canvas
-        self.context.set_fill_style(&JsValue::from_str("#1a1a2e"));
+        // Clear canvas with light background
+        self.context.set_fill_style(&JsValue::from_str("#f5f7fa"));
         self.context.fill_rect(0.0, 0.0, width, height);
 
         // Draw grid
@@ -116,8 +139,8 @@ impl Game {
     }
 
     fn draw_grid(&self, width: f64, height: f64) -> Result<(), JsValue> {
-        self.context.set_stroke_style(&JsValue::from_str("#2a2a3e"));
-        self.context.set_line_width(1.0);
+        self.context.set_stroke_style(&JsValue::from_str("#d0d7de"));
+        self.context.set_line_width(1.5);
 
         let grid_size = 50.0;
         
@@ -141,95 +164,54 @@ impl Game {
     }
 
     fn draw_ui(&self, width: f64, height: f64) -> Result<(), JsValue> {
-        // Draw large target number in center top (if applicable)
-        self.context.set_fill_style(&JsValue::from_str("#ffffff"));
-        self.context.set_font("bold 72px Arial");
+        // Draw problem info at top center of canvas
+        self.context.set_fill_style(&JsValue::from_str("#1a1a1a"));
         self.context.set_text_align("center");
         self.context.set_text_baseline("top");
         
-        // For primes, show nothing; for modular, show "mod X ≡ Y"
-        let target_text = match self.problem.problem_type {
-            ProblemType::Primes => String::new(),
+        // Draw target number/expression
+        let (target_text, font_size) = match self.problem.problem_type {
+            ProblemType::Primes => (String::new(), 48),
             ProblemType::Modular => {
                 if self.problem.numbers.len() >= 2 {
-                    format!("mod {} ≡ {}", self.problem.numbers[0], self.problem.numbers[1])
+                    (format!("mod {} ≡ {}", self.problem.numbers[0], self.problem.numbers[1]), 32)
                 } else {
-                    String::new()
+                    (String::new(), 48)
                 }
             },
             ProblemType::Gcd | ProblemType::Lcm => {
                 if self.problem.numbers.len() >= 2 {
-                    format!("{} & {}", self.problem.numbers[0], self.problem.numbers[1])
+                    (format!("{} & {}", self.problem.numbers[0], self.problem.numbers[1]), 40)
                 } else {
-                    format!("{}", self.problem.target_number)
+                    (format!("{}", self.problem.target_number), 48)
                 }
             },
-            _ => format!("{}", self.problem.target_number),
+            _ => (format!("{}", self.problem.target_number), 48),
         };
         
         if !target_text.is_empty() {
-            self.context.fill_text(&target_text, width / 2.0, 20.0)?;
+            let font = format!("bold {}px Arial", font_size);
+            self.context.set_font(&font);
+            self.context.fill_text(&target_text, width / 2.0, 10.0)?;
         }
 
-        // Draw problem description below the number
-        self.context.set_font("bold 20px Arial");
+        // Draw problem description
+        self.context.set_fill_style(&JsValue::from_str("#586069"));
+        self.context.set_font("14px Arial");
         self.context.set_text_align("center");
         let problem_text = self.problem.get_description();
-        self.context.fill_text(&problem_text, width / 2.0, 105.0)?;
-
-        // Draw score (left side)
-        self.context.set_text_align("left");
-        self.context.set_font("bold 20px Arial");
-        let score_text = format!("Score: {}", self.score);
-        self.context.fill_text(&score_text, 10.0, 20.0)?;
-
-        // Draw time (left side)
-        let time_text = format!("Time: {:.1}s", self.time_remaining);
-        self.context.fill_text(&time_text, 10.0, 50.0)?;
-
-        // Draw HP bar (right side)
-        let hp_bar_width = 150.0;
-        let hp_bar_height = 20.0;
-        let hp_bar_x = width - hp_bar_width - 10.0;
-        let hp_bar_y = 20.0;
-        
-        // HP bar background
-        self.context.set_fill_style(&JsValue::from_str("#333333"));
-        self.context.fill_rect(hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height);
-        
-        // HP bar fill
-        let hp_percentage = self.hp / self.max_hp;
-        let hp_color = if hp_percentage > 0.6 {
-            "#4ecdc4"
-        } else if hp_percentage > 0.3 {
-            "#ffdd00"
-        } else {
-            "#ff6b6b"
-        };
-        self.context.set_fill_style(&JsValue::from_str(hp_color));
-        self.context.fill_rect(hp_bar_x, hp_bar_y, hp_bar_width * hp_percentage, hp_bar_height);
-        
-        // HP bar border
-        self.context.set_stroke_style(&JsValue::from_str("#ffffff"));
-        self.context.set_line_width(2.0);
-        self.context.stroke_rect(hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height);
-        
-        // HP text
-        self.context.set_fill_style(&JsValue::from_str("#ffffff"));
-        self.context.set_font("bold 14px Arial");
-        self.context.set_text_align("center");
-        let hp_text = format!("HP: {:.0}%", (self.hp / self.max_hp * 100.0));
-        self.context.fill_text(&hp_text, hp_bar_x + hp_bar_width / 2.0, hp_bar_y + 15.0)?;
+        self.context.fill_text(&problem_text, width / 2.0, if !target_text.is_empty() { 65.0 } else { 20.0 })?;
 
         // Draw game over
         if self.game_over {
-            self.context.set_fill_style(&JsValue::from_str("rgba(0, 0, 0, 0.7)"));
+            self.context.set_fill_style(&JsValue::from_str("rgba(255, 255, 255, 0.95)"));
             self.context.fill_rect(0.0, 0.0, width, height);
 
-            self.context.set_fill_style(&JsValue::from_str("#ffdd00"));
+            self.context.set_fill_style(&JsValue::from_str("#d73a49"));
             self.context.set_font("bold 48px Arial");
             self.context.fill_text("GAME OVER", width / 2.0 - 150.0, height / 2.0)?;
 
+            self.context.set_fill_style(&JsValue::from_str("#1a1a1a"));
             self.context.set_font("bold 32px Arial");
             let final_score = format!("Final Score: {}", self.score);
             self.context.fill_text(&final_score, width / 2.0 - 120.0, height / 2.0 + 50.0)?;
@@ -259,9 +241,11 @@ impl Game {
                 if self.problem.is_correct_answer(number.value) {
                     // Correct answer
                     self.score += 100;
+                    web_sys::console::log_1(&format!("✓ Correct! Value: {}", number.value).into());
                 } else {
                     // Wrong answer - take damage
                     self.hp = (self.hp - 20.0).max(0.0);
+                    web_sys::console::log_1(&format!("✗ Wrong! Value: {}", number.value).into());
                 }
                 
                 break; // Only process one click at a time
@@ -283,6 +267,21 @@ impl Game {
 
     pub fn is_game_over(&self) -> bool {
         self.game_over
+    }
+
+    pub fn skip_problem(&mut self) {
+        if self.game_over {
+            return;
+        }
+
+        // Generate new problem without bonus
+        let width = self.canvas.width() as f64;
+        let height = self.canvas.height() as f64;
+        self.problem = Self::random_problem();
+        self.numbers = NumberObject::generate_in_grid(&self.problem, width, height);
+        
+        // Small HP penalty for skipping
+        self.hp = (self.hp - 10.0).max(0.0);
     }
 
     fn random_problem() -> MathProblem {
