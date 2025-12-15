@@ -261,7 +261,11 @@ impl Game2P {
         } else {
             20.0 // Fallback
         };
-        let font_size = (circle_radius * 0.55).max(10.0); // Match the font calculation in NumberObject
+        let font_size = (circle_radius * 0.50).max(8.0); // Match the font calculation in NumberObject
+        
+        // Debug log for 2P mode
+        web_sys::console::log_1(&format!("2P render: circle_radius={:.1}, font_size={:.1}, numbers={}", 
+            circle_radius, font_size, player.numbers.len()).into());
         
         for number in &player.numbers {
             let adjusted_x = number.x;

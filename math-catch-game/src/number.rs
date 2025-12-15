@@ -54,9 +54,9 @@ impl NumberObject {
         context.set_line_width(3.0);
         context.stroke();
 
-        // Draw number text with dynamic font size (more conservative sizing)
+        // Draw number text with dynamic font size (very conservative sizing)
         context.set_fill_style(&JsValue::from_str("#ffffff"));
-        let font_size = (self.radius * 0.55).max(10.0); // Reduced from 0.6 to 0.55, min from 12 to 10
+        let font_size = (self.radius * 0.50).max(8.0); // Further reduced: 0.50 ratio, min 8px
         let font = format!("bold {}px Arial", font_size as i32);
         context.set_font(&font);
         context.set_text_align("center");
@@ -78,12 +78,12 @@ impl NumberObject {
         let cell_height = height / rows as f64;
         let start_y = 0.0;
         
-        // Calculate appropriate radius based on cell size with much better scaling
-        // Use divisor of 5.0 (increased from 3.5) to ensure numbers fit well in cells
-        // Target: circle should take up ~40% of cell size (diameter = 80% of smaller dimension)
-        let base_radius = cell_width.min(cell_height) / 5.0;
-        // Cap at 25px (reduced from 35px) for better fit on all screens
-        let max_radius = base_radius.min(25.0);
+        // Calculate appropriate radius based on cell size - VERY conservative sizing
+        // Use divisor of 6.0 for very small circles that definitely won't overlap
+        // Target: circle diameter should be less than 33% of cell size
+        let base_radius = cell_width.min(cell_height) / 6.0;
+        // Cap at 20px for guaranteed fit on all screens
+        let max_radius = base_radius.min(20.0);
         
         // Debug: Log the calculated values
         web_sys::console::log_1(&format!("Grid: width={}, height={}, cell={}x{}, base_radius={}, max_radius={}", 
