@@ -14,6 +14,19 @@ pub struct NumberObject {
 }
 
 impl NumberObject {
+    pub fn new_with_radius(x: f64, y: f64, value: u32, is_correct: bool, radius: f64) -> Self {
+        NumberObject {
+            x,
+            y,
+            value,
+            radius,
+            is_correct,
+            collected: false,
+        }
+    }
+}
+
+impl NumberObject {
     pub fn new(x: f64, y: f64, value: u32, is_correct: bool) -> Self {
         NumberObject {
             x,
@@ -38,12 +51,14 @@ impl NumberObject {
 
         // Draw border with high contrast
         context.set_stroke_style(&JsValue::from_str("#1a1a1a"));
-        context.set_line_width(4.0);
+        context.set_line_width(3.0);
         context.stroke();
 
-        // Draw number text
+        // Draw number text with dynamic font size
         context.set_fill_style(&JsValue::from_str("#ffffff"));
-        context.set_font("bold 24px Arial");
+        let font_size = (self.radius * 0.6).max(12.0);
+        let font = format!("bold {}px Arial", font_size as i32);
+        context.set_font(&font);
         context.set_text_align("center");
         context.set_text_baseline("middle");
         let text = format!("{}", self.value);
@@ -62,6 +77,9 @@ impl NumberObject {
         let cell_width = width / cols as f64;
         let cell_height = height / rows as f64;
         let start_y = 0.0;
+        
+        // Calculate appropriate radius based on cell size
+        let max_radius = (cell_width.min(cell_height) / 2.5).min(40.0);
         
         // Collect all numbers to display (correct + incorrect)
         let mut all_values = Vec::new();
@@ -87,7 +105,7 @@ impl NumberObject {
         use rand::seq::SliceRandom;
         all_values.shuffle(&mut rng);
         
-        // Place numbers in grid
+        // Place numbers in grid with calculated radius
         for (i, (value, is_correct)) in all_values.iter().enumerate().take(cols * rows) {
             let col = i % cols;
             let row = i / cols;
@@ -95,7 +113,7 @@ impl NumberObject {
             let x = (col as f64 + 0.5) * cell_width;
             let y = start_y + (row as f64 + 0.5) * cell_height;
             
-            numbers.push(NumberObject::new(x, y, *value, *is_correct));
+            numbers.push(NumberObject::new_with_radius(x, y, *value, *is_correct, max_radius));
         }
         
         numbers
