@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数学キャッチゲーム - Math Catch Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 数学キャッチゲーム</h1>
+            <p class="subtitle">Math Catch Game - Powered by Rust + WebAssembly</p>
+        </header>
+
+        <div class="game-container">
+            <div class="game-info">
+                <div class="info-item">
+                    <span class="label">スコア:</span>
+                    <span id="score" class="value">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">残り時間:</span>
+                    <span id="time" class="value">60</span>
+                </div>
+            </div>
+
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+            <div class="controls">
+                <button id="startButton" class="btn btn-primary">ゲーム開始</button>
+                <button id="restartButton" class="btn btn-secondary" style="display: none;">もう一度</button>
+            </div>
+
+            <div class="instructions">
+                <h3>🎯 遊び方</h3>
+                <ul>
+                    <li>画面をクリック/タップすると網が伸びます</li>
+                    <li>網は自動的に30度ずつ回転します</li>
+                    <li>指示された数字を捕まえてください</li>
+                    <li>正解: +100点、不正解: -50点</li>
+                    <li>問題をクリアすると +200点のボーナス!</li>
+                </ul>
+            </div>
+        </div>
+
+        <footer>
+            <p>Rust + WebAssembly で実装された数学学習ゲーム</p>
+        </footer>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+</body>
+</html>
