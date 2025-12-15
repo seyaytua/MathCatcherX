@@ -13,6 +13,7 @@ pub struct MathProblem {
     pub numbers: Vec<u32>,
     pub correct_answers: Vec<u32>,
     pub description: String,
+    pub target_number: u32,
 }
 
 impl MathProblem {
@@ -36,13 +37,14 @@ impl MathProblem {
         let a = gcd * a_mult;
         let b = gcd * b_mult;
         
-        let description = format!("Catch the GCD of {} and {}", a, b);
+        let description = format!("{}と{}の最大公約数を見つけよう", a, b);
         
         MathProblem {
             problem_type: ProblemType::Gcd,
             numbers: vec![a, b],
             correct_answers: vec![gcd],
             description,
+            target_number: gcd,
         }
     }
 
@@ -53,13 +55,14 @@ impl MathProblem {
         let b = rng.gen_range(3..12);
         
         let lcm = Self::calculate_lcm(a, b);
-        let description = format!("Catch the LCM of {} and {}", a, b);
+        let description = format!("{}と{}の最小公倍数を見つけよう", a, b);
         
         MathProblem {
             problem_type: ProblemType::Lcm,
             numbers: vec![a, b],
             correct_answers: vec![lcm],
             description,
+            target_number: lcm,
         }
     }
 
@@ -69,25 +72,27 @@ impl MathProblem {
         let number = rng.gen_range(12..30);
         let divisors = Self::get_divisors(number);
         
-        let description = format!("Catch all divisors of {}", number);
+        let description = format!("{}の約数を見つけよう", number);
         
         MathProblem {
             problem_type: ProblemType::Divisors,
             numbers: vec![number],
             correct_answers: divisors,
             description,
+            target_number: number,
         }
     }
 
     fn generate_primes_problem() -> Self {
         let primes = vec![2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47];
-        let description = "Catch all prime numbers!".to_string();
+        let description = "素数を全て見つけよう".to_string();
         
         MathProblem {
             problem_type: ProblemType::Primes,
             numbers: vec![],
             correct_answers: primes.iter().filter(|&&p| p < 50).cloned().collect(),
             description,
+            target_number: 0,
         }
     }
 

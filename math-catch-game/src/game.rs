@@ -24,7 +24,7 @@ impl Game {
         
         // Always use divisors problem
         let problem = MathProblem::new(ProblemType::Divisors);
-        let numbers = NumberObject::generate_in_grid(&problem, width, height);
+        let numbers = NumberObject::generate_in_grid(&problem, width, height, problem.target_number);
         
         Ok(Game {
             canvas,
@@ -85,7 +85,7 @@ impl Game {
             let width = self.canvas.width() as f64;
             let height = self.canvas.height() as f64;
             self.problem = MathProblem::new(ProblemType::Divisors);
-            self.numbers = NumberObject::generate_in_grid(&self.problem, width, height);
+            self.numbers = NumberObject::generate_in_grid(&self.problem, width, height, self.problem.target_number);
             self.score += 200; // Bonus for completing problem
             
             // Heal player
