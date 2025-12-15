@@ -143,31 +143,32 @@ impl Game {
     fn draw_ui(&self, width: f64, height: f64) -> Result<(), JsValue> {
         // Draw large target number in center top (if applicable)
         self.context.set_fill_style(&JsValue::from_str("#ffffff"));
-        self.context.set_font("bold 72px Arial");
         self.context.set_text_align("center");
         self.context.set_text_baseline("top");
         
         // For primes, show nothing; for modular, show "mod X ≡ Y"
-        let target_text = match self.problem.problem_type {
-            ProblemType::Primes => String::new(),
+        let (target_text, font_size) = match self.problem.problem_type {
+            ProblemType::Primes => (String::new(), 72),
             ProblemType::Modular => {
                 if self.problem.numbers.len() >= 2 {
-                    format!("mod {} ≡ {}", self.problem.numbers[0], self.problem.numbers[1])
+                    (format!("mod {} ≡ {}", self.problem.numbers[0], self.problem.numbers[1]), 48)
                 } else {
-                    String::new()
+                    (String::new(), 72)
                 }
             },
             ProblemType::Gcd | ProblemType::Lcm => {
                 if self.problem.numbers.len() >= 2 {
-                    format!("{} & {}", self.problem.numbers[0], self.problem.numbers[1])
+                    (format!("{} & {}", self.problem.numbers[0], self.problem.numbers[1]), 56)
                 } else {
-                    format!("{}", self.problem.target_number)
+                    (format!("{}", self.problem.target_number), 72)
                 }
             },
-            _ => format!("{}", self.problem.target_number),
+            _ => (format!("{}", self.problem.target_number), 72),
         };
         
         if !target_text.is_empty() {
+            let font = format!("bold {}px Arial", font_size);
+            self.context.set_font(&font);
             self.context.fill_text(&target_text, width / 2.0, 20.0)?;
         }
 
