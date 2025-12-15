@@ -1,7 +1,9 @@
-import init, { GameWrapper } from './pkg/math_catch_game.js';
+import init, { GameWrapper, Game2PWrapper } from './pkg/math_catch_game.js';
 
 let game = null;
+let game2p = null;
 let animationId = null;
+let currentMode = 'solo'; // 'solo' or 'local2p'
 
 async function run() {
     // Initialize WASM
@@ -45,12 +47,19 @@ async function run() {
         canvas.height = Math.floor(height);
         
         // Reinitialize game if it exists
-        if (game) {
+        if (currentMode === 'solo' && game) {
             const wasPlaying = !game.is_game_over();
             game = new GameWrapper('gameCanvas');
             if (wasPlaying) {
                 game.start();
                 gameLoop();
+            }
+        } else if (currentMode === 'local2p' && game2p) {
+            const wasPlaying = !game2p.is_game_over();
+            game2p = new Game2PWrapper('gameCanvas');
+            if (wasPlaying) {
+                game2p.start();
+                gameLoop2P();
             }
         }
     }
@@ -106,35 +115,80 @@ async function run() {
             if (!card.classList.contains('mode-locked')) {
                 const mode = card.dataset.mode;
                 console.log('Selected mode:', mode);
+                
+                // Update active state
+                document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('mode-active'));
+                card.classList.add('mode-active');
+                
+                // Switch mode
+                currentMode = mode;
                 modeModal.style.display = 'none';
-                // TODO: Implement mode switching
+                
+                // Stop current game and reset
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                
+                // Reinitialize based on mode
+                if (currentMode === 'solo') {
+                    game = new GameWrapper('gameCanvas');
+                    game2p = null;
+                } else if (currentMode === 'local2p') {
+                    game2p = new Game2PWrapper('gameCanvas');
+                    game = null;
+                }
+                
+                // Show start button
+                startButton.style.display = 'inline-flex';
+                skipButton.style.display = 'none';
+                restartButton.style.display = 'none';
+                
+                resizeCanvas();
             }
         });
     });
 
     // Handle canvas clicks
     canvas.addEventListener('click', (e) => {
-        if (game && !game.is_game_over()) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const x = (e.clientX - rect.left) * scaleX;
-            const y = (e.clientY - rect.top) * scaleY;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        
+        if (currentMode === 'solo' && game && !game.is_game_over()) {
             game.handle_click(x, y);
+        } else if (currentMode === 'local2p' && game2p && !game2p.is_game_over()) {
+            // Determine which player's area was clicked
+            const halfHeight = canvas.height / 2;
+            if (y <= halfHeight) {
+                game2p.handle_click_player1(x, y);
+            } else {
+                game2p.handle_click_player2(x, y);
+            }
         }
     });
 
     // Handle touch events for mobile
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
-        if (game && !game.is_game_over()) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const touch = e.touches[0];
-            const x = (touch.clientX - rect.left) * scaleX;
-            const y = (touch.clientY - rect.top) * scaleY;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const touch = e.touches[0];
+        const x = (touch.clientX - rect.left) * scaleX;
+        const y = (touch.clientY - rect.top) * scaleY;
+        
+        if (currentMode === 'solo' && game && !game.is_game_over()) {
             game.handle_click(x, y);
+        } else if (currentMode === 'local2p' && game2p && !game2p.is_game_over()) {
+            const halfHeight = canvas.height / 2;
+            if (y <= halfHeight) {
+                game2p.handle_click_player1(x, y);
+            } else {
+                game2p.handle_click_player2(x, y);
+            }
         }
     });
 
@@ -143,9 +197,9 @@ async function run() {
         startGame();
     });
 
-    // Skip button
+    // Skip button (only for solo mode)
     skipButton.addEventListener('click', () => {
-        if (game && !game.is_game_over()) {
+        if (currentMode === 'solo' && game && !game.is_game_over()) {
             game.skip_problem();
         }
     });
@@ -156,23 +210,37 @@ async function run() {
     });
 
     function startGame() {
-        if (game) {
+        if (currentMode === 'solo' && game) {
             game.start();
             startButton.style.display = 'none';
             skipButton.style.display = 'inline-flex';
             restartButton.style.display = 'none';
             gameLoop();
+        } else if (currentMode === 'local2p' && game2p) {
+            game2p.start();
+            startButton.style.display = 'none';
+            skipButton.style.display = 'none'; // No skip in 2P mode
+            restartButton.style.display = 'none';
+            gameLoop2P();
         }
     }
 
     function restartGame() {
-        // Create new game instance
-        game = new GameWrapper('gameCanvas');
-        game.start();
-        startButton.style.display = 'none';
-        skipButton.style.display = 'inline-flex';
-        restartButton.style.display = 'none';
-        gameLoop();
+        if (currentMode === 'solo') {
+            game = new GameWrapper('gameCanvas');
+            game.start();
+            startButton.style.display = 'none';
+            skipButton.style.display = 'inline-flex';
+            restartButton.style.display = 'none';
+            gameLoop();
+        } else if (currentMode === 'local2p') {
+            game2p = new Game2PWrapper('gameCanvas');
+            game2p.start();
+            startButton.style.display = 'none';
+            skipButton.style.display = 'none';
+            restartButton.style.display = 'none';
+            gameLoop2P();
+        }
     }
 
     function gameLoop() {
@@ -198,6 +266,31 @@ async function run() {
 
             // Continue game loop
             animationId = requestAnimationFrame(gameLoop);
+        }
+    }
+
+    function gameLoop2P() {
+        if (game2p) {
+            // Update and render the game
+            game2p.update_and_render();
+
+            // Update UI with player 1 stats (could show both)
+            scoreElement.textContent = `P1:${game2p.get_player1_score()} P2:${game2p.get_player2_score()}`;
+            timeElement.textContent = Math.min(game2p.get_player1_time(), game2p.get_player2_time());
+            hpElement.textContent = `P1:${game2p.get_player1_hp()} P2:${game2p.get_player2_hp()}`;
+
+            if (game2p.is_game_over()) {
+                // Show restart button
+                restartButton.style.display = 'inline-flex';
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                return;
+            }
+
+            // Continue game loop
+            animationId = requestAnimationFrame(gameLoop2P);
         }
     }
 
