@@ -53,8 +53,12 @@ impl GameWrapper {
         self.game.borrow_mut().update_and_render()
     }
 
-    pub fn handle_touch(&mut self, x: f64, y: f64) {
-        self.game.borrow_mut().handle_touch(x, y);
+    pub fn handle_key_down(&mut self, key: String) {
+        self.game.borrow_mut().handle_key_down(&key);
+    }
+
+    pub fn handle_key_up(&mut self, key: String) {
+        self.game.borrow_mut().handle_key_up(&key);
     }
 
     pub fn get_score(&self) -> u32 {

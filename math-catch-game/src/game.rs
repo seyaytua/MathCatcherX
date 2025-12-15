@@ -245,11 +245,102 @@ impl Game {
         Ok(())
     }
 
-    pub fn handle_touch(&mut self, x: f64, y: f64) {
+    pub fn handle_key_down(&mut self, key: &str) {
         if self.game_over {
             return;
         }
-        self.player.set_target(x, y);
+        
+        match key {
+            // Left: A, Arrow Left, or left side keys (Q, Z)
+            "ArrowLeft" | "a" | "A" => {
+                self.player.set_moving("left", true);
+            }
+            // Right: D, Arrow Right, or right side keys (H and beyond)
+            "ArrowRight" | "d" | "D" => {
+                self.player.set_moving("right", true);
+            }
+            // Up: W, Arrow Up, or top row keys
+            "ArrowUp" | "w" | "W" => {
+                self.player.set_moving("up", true);
+            }
+            // Down: S, Arrow Down, or bottom row keys
+            "ArrowDown" | "s" | "S" => {
+                self.player.set_moving("down", true);
+            }
+            // Additional left keys (Q row and Z row left of G)
+            "q" | "Q" | "z" | "Z" | "e" | "E" | "r" | "R" | "f" | "F" | "g" | "G" => {
+                if matches!(key, "q" | "Q" | "e" | "E") {
+                    self.player.set_moving("up", true);
+                }
+                if matches!(key, "z" | "Z") {
+                    self.player.set_moving("down", true);
+                }
+                if matches!(key, "q" | "Q" | "z" | "Z" | "f" | "F" | "g" | "G") {
+                    self.player.set_moving("left", true);
+                }
+            }
+            // Additional right keys (H and beyond)
+            "h" | "H" | "j" | "J" | "k" | "K" | "l" | "L" |
+            "u" | "U" | "i" | "I" | "o" | "O" | "p" | "P" |
+            "x" | "X" | "c" | "C" | "v" | "V" | "b" | "B" | "n" | "N" | "m" | "M" => {
+                if matches!(key, "u" | "U" | "i" | "I" | "o" | "O" | "p" | "P") {
+                    self.player.set_moving("up", true);
+                }
+                if matches!(key, "x" | "X" | "c" | "C" | "v" | "V" | "b" | "B" | "n" | "N" | "m" | "M") {
+                    self.player.set_moving("down", true);
+                }
+                self.player.set_moving("right", true);
+            }
+            // Rotate net: Space, Enter
+            " " | "Enter" => {
+                self.player.rotate_net();
+            }
+            _ => {}
+        }
+    }
+
+    pub fn handle_key_up(&mut self, key: &str) {
+        if self.game_over {
+            return;
+        }
+        
+        match key {
+            "ArrowLeft" | "a" | "A" => {
+                self.player.set_moving("left", false);
+            }
+            "ArrowRight" | "d" | "D" => {
+                self.player.set_moving("right", false);
+            }
+            "ArrowUp" | "w" | "W" => {
+                self.player.set_moving("up", false);
+            }
+            "ArrowDown" | "s" | "S" => {
+                self.player.set_moving("down", false);
+            }
+            "q" | "Q" | "z" | "Z" | "e" | "E" | "r" | "R" | "f" | "F" | "g" | "G" => {
+                if matches!(key, "q" | "Q" | "e" | "E") {
+                    self.player.set_moving("up", false);
+                }
+                if matches!(key, "z" | "Z") {
+                    self.player.set_moving("down", false);
+                }
+                if matches!(key, "q" | "Q" | "z" | "Z" | "f" | "F" | "g" | "G") {
+                    self.player.set_moving("left", false);
+                }
+            }
+            "h" | "H" | "j" | "J" | "k" | "K" | "l" | "L" |
+            "u" | "U" | "i" | "I" | "o" | "O" | "p" | "P" |
+            "x" | "X" | "c" | "C" | "v" | "V" | "b" | "B" | "n" | "N" | "m" | "M" => {
+                if matches!(key, "u" | "U" | "i" | "I" | "o" | "O" | "p" | "P") {
+                    self.player.set_moving("up", false);
+                }
+                if matches!(key, "x" | "X" | "c" | "C" | "v" | "V" | "b" | "B" | "n" | "N" | "m" | "M") {
+                    self.player.set_moving("down", false);
+                }
+                self.player.set_moving("right", false);
+            }
+            _ => {}
+        }
     }
 
     pub fn get_score(&self) -> u32 {
