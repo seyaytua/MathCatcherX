@@ -90,11 +90,20 @@ impl Game {
         }
         
         // Check if all correct numbers are collected
-        let all_correct_collected = self.numbers.iter()
+        let correct_numbers: Vec<_> = self.numbers.iter()
             .filter(|n| n.is_correct)
-            .all(|n| n.collected);
+            .collect();
+        
+        let collected_count = correct_numbers.iter().filter(|n| n.collected).count();
+        let total_correct = correct_numbers.len();
+        
+        // Debug log
+        web_sys::console::log_1(&format!("Collected {}/{} correct numbers", collected_count, total_correct).into());
+        
+        let all_correct_collected = total_correct > 0 && collected_count == total_correct;
 
         if all_correct_collected {
+            web_sys::console::log_1(&"🎉 All correct! Generating new problem...".into());
             // Generate new problem
             let width = self.canvas.width() as f64;
             let height = self.canvas.height() as f64;
@@ -232,9 +241,11 @@ impl Game {
                 if self.problem.is_correct_answer(number.value) {
                     // Correct answer
                     self.score += 100;
+                    web_sys::console::log_1(&format!("✓ Correct! Value: {}", number.value).into());
                 } else {
                     // Wrong answer - take damage
                     self.hp = (self.hp - 20.0).max(0.0);
+                    web_sys::console::log_1(&format!("✗ Wrong! Value: {}", number.value).into());
                 }
                 
                 break; // Only process one click at a time

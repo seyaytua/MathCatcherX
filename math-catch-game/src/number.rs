@@ -86,7 +86,7 @@ impl NumberObject {
         let max_radius = base_radius.min(20.0);
         
         // Debug: Log the calculated values
-        web_sys::console::log_1(&format!("Grid: width={}, height={}, cell={}x{}, base_radius={}, max_radius={}", 
+        web_sys::console::log_1(&format!("Grid: width={}, height={}, cell={}x{}, base_radius={:.1}, max_radius={:.1}", 
             width, height, cell_width, cell_height, base_radius, max_radius).into());
         
         // Collect all numbers to display (correct + incorrect)
@@ -112,6 +112,11 @@ impl NumberObject {
         // Shuffle the numbers
         use rand::seq::SliceRandom;
         all_values.shuffle(&mut rng);
+        
+        // Count correct answers
+        let correct_count = all_values.iter().filter(|(_, is_correct)| *is_correct).count();
+        web_sys::console::log_1(&format!("📋 Generated {} numbers ({} correct, {} incorrect)", 
+            all_values.len(), correct_count, all_values.len() - correct_count).into());
         
         // Place numbers in grid with calculated radius
         for (i, (value, is_correct)) in all_values.iter().enumerate().take(cols * rows) {

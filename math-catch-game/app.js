@@ -157,16 +157,23 @@ async function run() {
         const x = (e.clientX - rect.left) * scaleX;
         const y = (e.clientY - rect.top) * scaleY;
         
+        console.log(`Canvas clicked at (${x.toFixed(0)}, ${y.toFixed(0)}), mode=${currentMode}, game=${!!game}, game2p=${!!game2p}`);
+        
         if (currentMode === 'solo' && game && !game.is_game_over()) {
+            console.log('Calling game.handle_click()');
             game.handle_click(x, y);
         } else if (currentMode === 'local2p' && game2p && !game2p.is_game_over()) {
             // Determine which player's area was clicked
             const halfHeight = canvas.height / 2;
             if (y <= halfHeight) {
+                console.log('Calling game2p.handle_click_player1()');
                 game2p.handle_click_player1(x, y);
             } else {
+                console.log('Calling game2p.handle_click_player2()');
                 game2p.handle_click_player2(x, y);
             }
+        } else {
+            console.log('Click NOT handled - game_over or game not started');
         }
     });
 
