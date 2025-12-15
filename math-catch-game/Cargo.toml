@@ -1,6 +1,6 @@
 [package]
 name = "math-catch-game"
-version = "0.6.0"
+version = "0.8.0"
 edition = "2021"
 description = "A fun and educational math game built with Rust and WebAssembly"
 repository = "https://github.com/your-username/math-catch-game"
