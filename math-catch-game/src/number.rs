@@ -54,9 +54,9 @@ impl NumberObject {
         context.set_line_width(3.0);
         context.stroke();
 
-        // Draw number text with dynamic font size (very conservative sizing)
+        // Draw number text with dynamic font size for good readability
         context.set_fill_style(&JsValue::from_str("#ffffff"));
-        let font_size = (self.radius * 0.50).max(8.0); // Further reduced: 0.50 ratio, min 8px
+        let font_size = (self.radius * 0.60).max(12.0); // Good ratio: 0.60, min 12px
         let font = format!("bold {}px Arial", font_size as i32);
         context.set_font(&font);
         context.set_text_align("center");
@@ -71,19 +71,19 @@ impl NumberObject {
         let mut numbers = Vec::new();
         let mut rng = rand::thread_rng();
         
-        // Calculate grid layout
+        // Calculate grid layout - use 3 rows for 2P mode (when height is small)
         let cols = 5;
-        let rows = 4;
+        let rows = if height < 350.0 { 3 } else { 4 }; // 3 rows for 2P split screen
         let cell_width = width / cols as f64;
         let cell_height = height / rows as f64;
         let start_y = 0.0;
         
-        // Calculate appropriate radius based on cell size - VERY conservative sizing
-        // Use divisor of 6.0 for very small circles that definitely won't overlap
-        // Target: circle diameter should be less than 33% of cell size
-        let base_radius = cell_width.min(cell_height) / 6.0;
-        // Cap at 20px for guaranteed fit on all screens
-        let max_radius = base_radius.min(20.0);
+        // Calculate appropriate radius - larger for better visibility
+        // Use divisor of 4.0 for good visibility 
+        // Target: circle diameter should be ~50% of cell size for readability
+        let base_radius = cell_width.min(cell_height) / 4.0;
+        // Cap at 32px for good visibility
+        let max_radius = base_radius.min(32.0);
         
         // Debug: Log the calculated values
         web_sys::console::log_1(&format!("Grid: width={}, height={}, cell={}x{}, base_radius={:.1}, max_radius={:.1}", 
