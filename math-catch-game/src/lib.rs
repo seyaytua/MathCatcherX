@@ -53,8 +53,8 @@ impl GameWrapper {
         self.game.borrow_mut().update_and_render()
     }
 
-    pub fn handle_click(&mut self, x: f64, y: f64) {
-        self.game.borrow_mut().handle_click(x, y);
+    pub fn handle_touch(&mut self, x: f64, y: f64) {
+        self.game.borrow_mut().handle_touch(x, y);
     }
 
     pub fn get_score(&self) -> u32 {
@@ -63,6 +63,10 @@ impl GameWrapper {
 
     pub fn get_time_remaining(&self) -> u32 {
         self.game.borrow().get_time_remaining()
+    }
+
+    pub fn get_hp(&self) -> u32 {
+        self.game.borrow().get_hp()
     }
 
     pub fn is_game_over(&self) -> bool {

@@ -74,54 +74,50 @@ impl Game {
         self.game_time += delta_time;
         self.time_remaining -= delta_time;
 
+        // Check if player is still alive
+        if !self.player.is_alive() {
+            self.game_over = true;
+            return;
+        }
+
         if self.time_remaining <= 0.0 {
             self.game_over = true;
             return;
         }
 
         // Update player
-        self.player.update(delta_time);
-
-        // Update numbers
         let width = self.canvas.width() as f64;
         let height = self.canvas.height() as f64;
-        
-        for number in &mut self.numbers {
-            number.update(delta_time, width, height);
-        }
+        self.player.update(delta_time, width, height);
 
         // Check collisions with net
-        if self.player.is_net_extended() {
-            let mut captured_indices = Vec::new();
-            
-            for (i, number) in self.numbers.iter().enumerate() {
-                if self.player.check_net_collision(&number) {
-                    captured_indices.push(i);
-                }
-            }
-
-            // Process captured numbers
-            for &i in captured_indices.iter().rev() {
-                let number = &self.numbers[i];
+        for number in &mut self.numbers {
+            if !number.collected && self.player.check_net_collision(&number) {
+                number.collected = true;
+                
                 if self.problem.is_correct_answer(number.value) {
+                    // Correct answer
                     self.score += 100;
-                    self.numbers.remove(i);
                 } else {
-                    // Wrong answer - penalty
-                    if self.score >= 50 {
-                        self.score -= 50;
-                    }
+                    // Wrong answer - take damage
+                    self.player.take_damage(20.0);
                 }
             }
+        }
 
-            // Check if problem is solved
-            if self.numbers.is_empty() || 
-               self.numbers.iter().all(|n| !self.problem.is_correct_answer(n.value)) {
-                // Generate new problem
-                self.problem = MathProblem::new(ProblemType::Gcd);
-                self.numbers = NumberObject::generate_for_problem(&self.problem, width, height);
-                self.score += 200; // Bonus for completing problem
-            }
+        // Check if all correct numbers are collected
+        let all_correct_collected = self.numbers.iter()
+            .filter(|n| n.is_correct)
+            .all(|n| n.collected);
+
+        if all_correct_collected {
+            // Generate new problem
+            self.problem = MathProblem::new(ProblemType::Gcd);
+            self.numbers = NumberObject::generate_for_problem(&self.problem, width, height);
+            self.score += 200; // Bonus for completing problem
+            
+            // Heal player a bit
+            self.player.hp = (self.player.hp + 30.0).min(self.player.max_hp);
         }
     }
 
@@ -176,6 +172,39 @@ impl Game {
     }
 
     fn draw_ui(&self, width: f64, height: f64) -> Result<(), JsValue> {
+        // Draw HP bar
+        let hp_bar_width = 200.0;
+        let hp_bar_height = 20.0;
+        let hp_bar_x = width - hp_bar_width - 20.0;
+        let hp_bar_y = 20.0;
+        
+        // HP bar background
+        self.context.set_fill_style(&JsValue::from_str("#333333"));
+        self.context.fill_rect(hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height);
+        
+        // HP bar fill
+        let hp_percentage = self.player.hp / self.player.max_hp;
+        let hp_color = if hp_percentage > 0.6 {
+            "#4ecdc4"
+        } else if hp_percentage > 0.3 {
+            "#ffdd00"
+        } else {
+            "#ff6b6b"
+        };
+        self.context.set_fill_style(&JsValue::from_str(hp_color));
+        self.context.fill_rect(hp_bar_x, hp_bar_y, hp_bar_width * hp_percentage, hp_bar_height);
+        
+        // HP bar border
+        self.context.set_stroke_style(&JsValue::from_str("#ffffff"));
+        self.context.set_line_width(2.0);
+        self.context.stroke_rect(hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height);
+        
+        // HP text
+        self.context.set_fill_style(&JsValue::from_str("#ffffff"));
+        self.context.set_font("bold 16px Arial");
+        let hp_text = format!("HP: {:.0}%", self.player.get_hp_percentage());
+        self.context.fill_text(&hp_text, hp_bar_x + hp_bar_width / 2.0 - 30.0, hp_bar_y + 15.0)?;
+
         // Draw problem description
         self.context.set_fill_style(&JsValue::from_str("#ffffff"));
         self.context.set_font("bold 20px Arial");
@@ -203,16 +232,24 @@ impl Game {
             self.context.set_font("bold 32px Arial");
             let final_score = format!("Final Score: {}", self.score);
             self.context.fill_text(&final_score, width / 2.0 - 120.0, height / 2.0 + 50.0)?;
+            
+            let reason = if !self.player.is_alive() {
+                "HP reached 0!"
+            } else {
+                "Time's up!"
+            };
+            self.context.set_font("bold 24px Arial");
+            self.context.fill_text(reason, width / 2.0 - 80.0, height / 2.0 + 90.0)?;
         }
 
         Ok(())
     }
 
-    pub fn handle_click(&mut self, x: f64, y: f64) {
+    pub fn handle_touch(&mut self, x: f64, y: f64) {
         if self.game_over {
             return;
         }
-        self.player.handle_click(x, y);
+        self.player.set_target(x, y);
     }
 
     pub fn get_score(&self) -> u32 {
@@ -221,6 +258,10 @@ impl Game {
 
     pub fn get_time_remaining(&self) -> u32 {
         self.time_remaining as u32
+    }
+
+    pub fn get_hp(&self) -> u32 {
+        self.player.get_hp_percentage() as u32
     }
 
     pub fn is_game_over(&self) -> bool {

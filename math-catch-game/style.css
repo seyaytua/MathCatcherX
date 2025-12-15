@@ -65,9 +65,20 @@ header h1 {
 }
 
 .value {
-    display: block;
+    display: inline-block;
     font-size: 2em;
     font-weight: bold;
+}
+
+.hp-value {
+    color: #4ecdc4;
+}
+
+.unit {
+    display: inline-block;
+    font-size: 1.2em;
+    margin-left: 5px;
+    opacity: 0.9;
 }
 
 canvas {

@@ -16,19 +16,30 @@ async function run() {
     // Initialize game
     game = new GameWrapper('gameCanvas');
 
-    // Handle canvas clicks
-    canvas.addEventListener('click', (e) => {
+    // Handle mouse events (click and drag)
+    canvas.addEventListener('mousedown', (e) => {
         if (game && !game.is_game_over()) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
             const x = (e.clientX - rect.left) * scaleX;
             const y = (e.clientY - rect.top) * scaleY;
-            game.handle_click(x, y);
+            game.handle_touch(x, y);
         }
     });
 
-    // Handle touch events for mobile
+    canvas.addEventListener('mousemove', (e) => {
+        if (game && !game.is_game_over() && e.buttons === 1) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            game.handle_touch(x, y);
+        }
+    });
+
+    // Handle touch events for mobile (touch and drag)
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
         if (game && !game.is_game_over()) {
@@ -38,7 +49,20 @@ async function run() {
             const touch = e.touches[0];
             const x = (touch.clientX - rect.left) * scaleX;
             const y = (touch.clientY - rect.top) * scaleY;
-            game.handle_click(x, y);
+            game.handle_touch(x, y);
+        }
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (game && !game.is_game_over()) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const touch = e.touches[0];
+            const x = (touch.clientX - rect.left) * scaleX;
+            const y = (touch.clientY - rect.top) * scaleY;
+            game.handle_touch(x, y);
         }
     });
 
@@ -78,6 +102,10 @@ async function run() {
             // Update UI
             scoreElement.textContent = game.get_score();
             timeElement.textContent = game.get_time_remaining();
+            const hpElement = document.getElementById('hp');
+            if (hpElement) {
+                hpElement.textContent = game.get_hp();
+            }
 
             if (game.is_game_over()) {
                 // Show restart button
