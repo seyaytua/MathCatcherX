@@ -9,6 +9,7 @@ async function run() {
     
     const canvas = document.getElementById('gameCanvas');
     const startButton = document.getElementById('startButton');
+    const skipButton = document.getElementById('skipButton');
     const restartButton = document.getElementById('restartButton');
     const scoreElement = document.getElementById('score');
     const timeElement = document.getElementById('time');
@@ -47,6 +48,13 @@ async function run() {
         startGame();
     });
 
+    // Skip button
+    skipButton.addEventListener('click', () => {
+        if (game && !game.is_game_over()) {
+            game.skip_problem();
+        }
+    });
+
     // Restart button
     restartButton.addEventListener('click', () => {
         restartGame();
@@ -56,6 +64,7 @@ async function run() {
         if (game) {
             game.start();
             startButton.style.display = 'none';
+            skipButton.style.display = 'inline-block';
             restartButton.style.display = 'none';
             gameLoop();
         }
@@ -66,6 +75,7 @@ async function run() {
         game = new GameWrapper('gameCanvas');
         game.start();
         startButton.style.display = 'none';
+        skipButton.style.display = 'inline-block';
         restartButton.style.display = 'none';
         gameLoop();
     }
@@ -84,7 +94,8 @@ async function run() {
             }
 
             if (game.is_game_over()) {
-                // Show restart button
+                // Show restart button, hide skip button
+                skipButton.style.display = 'none';
                 restartButton.style.display = 'inline-block';
                 if (animationId) {
                     cancelAnimationFrame(animationId);

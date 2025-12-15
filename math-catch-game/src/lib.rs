@@ -55,6 +55,10 @@ impl GameWrapper {
         self.game.borrow_mut().handle_click(x, y);
     }
 
+    pub fn skip_problem(&mut self) {
+        self.game.borrow_mut().skip_problem();
+    }
+
     pub fn get_score(&self) -> u32 {
         self.game.borrow().get_score()
     }

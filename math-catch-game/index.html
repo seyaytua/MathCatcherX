@@ -33,6 +33,7 @@
 
             <div class="controls">
                 <button id="startButton" class="btn btn-primary">ゲーム開始</button>
+                <button id="skipButton" class="btn btn-skip" style="display: none;">問題をスキップ (-10 HP)</button>
                 <button id="restartButton" class="btn btn-secondary" style="display: none;">もう一度</button>
             </div>
 
@@ -54,6 +55,7 @@
                         <li>💚 <strong>正解:</strong> +100点</li>
                         <li>💔 <strong>不正解:</strong> -20 HP（0になるとゲームオーバー）</li>
                         <li>🎁 <strong>全問正解:</strong> +200点のボーナス + HP回復(+30)</li>
+                        <li>⏭️ <strong>スキップ:</strong> 答えがない時は「スキップ」ボタン (-10 HP)</li>
                         <li>⏱️ <strong>制限時間:</strong> 60秒</li>
                     </ul>
                 </div>

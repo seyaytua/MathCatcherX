@@ -30,15 +30,15 @@ impl NumberObject {
             return Ok(()); // Don't draw collected numbers
         }
 
-        // Draw number circle (same color for all)
-        context.set_fill_style(&JsValue::from_str("#667eea")); // Purple color for all
+        // Draw number circle (high contrast blue for all)
+        context.set_fill_style(&JsValue::from_str("#0969da")); // High contrast blue
         context.begin_path();
         context.arc(self.x, self.y, self.radius, 0.0, 2.0 * PI)?;
         context.fill();
 
-        // Draw border
-        context.set_stroke_style(&JsValue::from_str("#ffffff"));
-        context.set_line_width(3.0);
+        // Draw border with high contrast
+        context.set_stroke_style(&JsValue::from_str("#1a1a1a"));
+        context.set_line_width(4.0);
         context.stroke();
 
         // Draw number text

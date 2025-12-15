@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #e6f2ff 0%, #f0f6fc 100%);
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -21,14 +21,14 @@ body {
 
 header {
     text-align: center;
-    color: white;
+    color: #1a1a1a;
     margin-bottom: 30px;
 }
 
 header h1 {
     font-size: 3em;
     margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .subtitle {
@@ -48,8 +48,9 @@ header h1 {
     justify-content: space-around;
     margin-bottom: 20px;
     padding: 15px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0969da 0%, #0550ae 100%);
     border-radius: 10px;
+    border: 2px solid #1a1a1a;
 }
 
 .info-item {
@@ -71,7 +72,7 @@ header h1 {
 }
 
 .hp-value {
-    color: #4ecdc4;
+    color: #22863a;
 }
 
 .unit {
@@ -86,11 +87,12 @@ canvas {
     width: 100%;
     max-width: 800px;
     height: auto;
-    border: 3px solid #667eea;
+    border: 4px solid #1a1a1a;
     border-radius: 10px;
     cursor: pointer;
-    background: #1a1a2e;
+    background: #f5f7fa;
     margin: 0 auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .controls {
@@ -110,23 +112,36 @@ canvas {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0969da 0%, #0550ae 100%);
     color: white;
+    border: 2px solid #1a1a1a;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 5px 20px rgba(9, 105, 218, 0.5);
 }
 
 .btn-secondary {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, #d73a49 0%, #cb2431 100%);
     color: white;
+    border: 2px solid #1a1a1a;
 }
 
 .btn-secondary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 20px rgba(245, 87, 108, 0.5);
+    box-shadow: 0 5px 20px rgba(215, 58, 73, 0.5);
+}
+
+.btn-skip {
+    background: linear-gradient(135deg, #d29922 0%, #b08800 100%);
+    color: white;
+    border: 2px solid #1a1a1a;
+}
+
+.btn-skip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(210, 153, 34, 0.5);
 }
 
 .btn:active {
@@ -136,27 +151,29 @@ canvas {
 .instructions {
     margin-top: 30px;
     padding: 20px;
-    background: #f8f9fa;
+    background: #ffffff;
     border-radius: 10px;
-    border-left: 4px solid #667eea;
+    border: 2px solid #1a1a1a;
+    border-left: 6px solid #0969da;
 }
 
 .instructions h3 {
-    color: #667eea;
+    color: #0969da;
     margin-bottom: 15px;
+    font-size: 1.4em;
 }
 
 .instructions h4 {
-    color: #764ba2;
+    color: #0550ae;
     margin: 15px 0 10px 0;
     font-size: 1.1em;
 }
 
 .game-rules {
-    background: white;
+    background: #f5f7fa;
     padding: 20px;
     border-radius: 8px;
-    border: 2px solid #4ecdc4;
+    border: 2px solid #0969da;
 }
 
 .instructions ul {
@@ -176,7 +193,7 @@ canvas {
     content: "•";
     position: absolute;
     left: 0;
-    color: #667eea;
+    color: #0969da;
     font-weight: bold;
     font-size: 1.2em;
 }
@@ -194,14 +211,15 @@ canvas {
 
 .problem-types li:before {
     content: "→";
-    color: #764ba2;
+    color: #0550ae;
 }
 
 footer {
     text-align: center;
     margin-top: 30px;
-    color: white;
-    opacity: 0.8;
+    color: #1a1a1a;
+    opacity: 0.7;
+    font-weight: 500;
 }
 
 @media (max-width: 768px) {

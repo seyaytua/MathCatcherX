@@ -97,8 +97,8 @@ impl Game {
         let width = self.canvas.width() as f64;
         let height = self.canvas.height() as f64;
 
-        // Clear canvas
-        self.context.set_fill_style(&JsValue::from_str("#1a1a2e"));
+        // Clear canvas with light background
+        self.context.set_fill_style(&JsValue::from_str("#f5f7fa"));
         self.context.fill_rect(0.0, 0.0, width, height);
 
         // Draw grid
@@ -116,8 +116,8 @@ impl Game {
     }
 
     fn draw_grid(&self, width: f64, height: f64) -> Result<(), JsValue> {
-        self.context.set_stroke_style(&JsValue::from_str("#2a2a3e"));
-        self.context.set_line_width(1.0);
+        self.context.set_stroke_style(&JsValue::from_str("#d0d7de"));
+        self.context.set_line_width(1.5);
 
         let grid_size = 50.0;
         
@@ -142,7 +142,7 @@ impl Game {
 
     fn draw_ui(&self, width: f64, height: f64) -> Result<(), JsValue> {
         // Draw large target number in center top (if applicable)
-        self.context.set_fill_style(&JsValue::from_str("#ffffff"));
+        self.context.set_fill_style(&JsValue::from_str("#1a1a1a"));
         self.context.set_text_align("center");
         self.context.set_text_baseline("top");
         
@@ -173,12 +173,14 @@ impl Game {
         }
 
         // Draw problem description below the number
+        self.context.set_fill_style(&JsValue::from_str("#1a1a1a"));
         self.context.set_font("bold 20px Arial");
         self.context.set_text_align("center");
         let problem_text = self.problem.get_description();
         self.context.fill_text(&problem_text, width / 2.0, 105.0)?;
 
         // Draw score (left side)
+        self.context.set_fill_style(&JsValue::from_str("#1a1a1a"));
         self.context.set_text_align("left");
         self.context.set_font("bold 20px Arial");
         let score_text = format!("Score: {}", self.score);
@@ -195,23 +197,23 @@ impl Game {
         let hp_bar_y = 20.0;
         
         // HP bar background
-        self.context.set_fill_style(&JsValue::from_str("#333333"));
+        self.context.set_fill_style(&JsValue::from_str("#e1e4e8"));
         self.context.fill_rect(hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height);
         
-        // HP bar fill
+        // HP bar fill with high contrast colors
         let hp_percentage = self.hp / self.max_hp;
         let hp_color = if hp_percentage > 0.6 {
-            "#4ecdc4"
+            "#22863a"
         } else if hp_percentage > 0.3 {
-            "#ffdd00"
+            "#d29922"
         } else {
-            "#ff6b6b"
+            "#d73a49"
         };
         self.context.set_fill_style(&JsValue::from_str(hp_color));
         self.context.fill_rect(hp_bar_x, hp_bar_y, hp_bar_width * hp_percentage, hp_bar_height);
         
         // HP bar border
-        self.context.set_stroke_style(&JsValue::from_str("#ffffff"));
+        self.context.set_stroke_style(&JsValue::from_str("#1a1a1a"));
         self.context.set_line_width(2.0);
         self.context.stroke_rect(hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height);
         
@@ -224,13 +226,14 @@ impl Game {
 
         // Draw game over
         if self.game_over {
-            self.context.set_fill_style(&JsValue::from_str("rgba(0, 0, 0, 0.7)"));
+            self.context.set_fill_style(&JsValue::from_str("rgba(255, 255, 255, 0.95)"));
             self.context.fill_rect(0.0, 0.0, width, height);
 
-            self.context.set_fill_style(&JsValue::from_str("#ffdd00"));
+            self.context.set_fill_style(&JsValue::from_str("#d73a49"));
             self.context.set_font("bold 48px Arial");
             self.context.fill_text("GAME OVER", width / 2.0 - 150.0, height / 2.0)?;
 
+            self.context.set_fill_style(&JsValue::from_str("#1a1a1a"));
             self.context.set_font("bold 32px Arial");
             let final_score = format!("Final Score: {}", self.score);
             self.context.fill_text(&final_score, width / 2.0 - 120.0, height / 2.0 + 50.0)?;
@@ -284,6 +287,21 @@ impl Game {
 
     pub fn is_game_over(&self) -> bool {
         self.game_over
+    }
+
+    pub fn skip_problem(&mut self) {
+        if self.game_over {
+            return;
+        }
+
+        // Generate new problem without bonus
+        let width = self.canvas.width() as f64;
+        let height = self.canvas.height() as f64;
+        self.problem = Self::random_problem();
+        self.numbers = NumberObject::generate_in_grid(&self.problem, width, height);
+        
+        // Small HP penalty for skipping
+        self.hp = (self.hp - 10.0).max(0.0);
     }
 
     fn random_problem() -> MathProblem {
