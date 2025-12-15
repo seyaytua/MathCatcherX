@@ -3,10 +3,8 @@ use wasm_bindgen::JsCast;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, window};
 use std::cell::RefCell;
 use std::rc::Rc;
-use rand::Rng;
 
 mod game;
-mod player;
 mod number;
 mod math_problem;
 
@@ -53,12 +51,8 @@ impl GameWrapper {
         self.game.borrow_mut().update_and_render()
     }
 
-    pub fn handle_key_down(&mut self, key: String) {
-        self.game.borrow_mut().handle_key_down(&key);
-    }
-
-    pub fn handle_key_up(&mut self, key: String) {
-        self.game.borrow_mut().handle_key_up(&key);
+    pub fn handle_click(&mut self, x: f64, y: f64) {
+        self.game.borrow_mut().handle_click(x, y);
     }
 
     pub fn get_score(&self) -> u32 {

@@ -16,127 +16,31 @@ async function run() {
     // Initialize game
     game = new GameWrapper('gameCanvas');
 
-    // Handle keyboard events
-    document.addEventListener('keydown', (e) => {
+    // Handle canvas clicks
+    canvas.addEventListener('click', (e) => {
         if (game && !game.is_game_over()) {
-            game.handle_key_down(e.key);
-            
-            // Prevent default for arrow keys and space
-            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
-                e.preventDefault();
-            }
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            game.handle_click(x, y);
         }
     });
 
-    document.addEventListener('keyup', (e) => {
+    // Handle touch events for mobile
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
         if (game && !game.is_game_over()) {
-            game.handle_key_up(e.key);
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const touch = e.touches[0];
+            const x = (touch.clientX - rect.left) * scaleX;
+            const y = (touch.clientY - rect.top) * scaleY;
+            game.handle_click(x, y);
         }
     });
-
-    // Touch controls for mobile
-    const touchControls = {
-        left: false,
-        right: false,
-        up: false,
-        down: false
-    };
-
-    // Virtual D-pad for touch devices (will be added to HTML)
-    const createTouchControls = () => {
-        const controlsDiv = document.createElement('div');
-        controlsDiv.id = 'touch-controls';
-        controlsDiv.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            display: grid;
-            grid-template-columns: repeat(3, 60px);
-            grid-template-rows: repeat(3, 60px);
-            gap: 5px;
-            z-index: 1000;
-        `;
-
-        const buttons = [
-            { pos: '1/2/2/3', dir: 'up', label: '↑' },
-            { pos: '2/1/3/2', dir: 'left', label: '←' },
-            { pos: '2/2/3/3', dir: 'down', label: '↓' },
-            { pos: '2/3/3/4', dir: 'right', label: '→' }
-        ];
-
-        buttons.forEach(btn => {
-            const button = document.createElement('button');
-            button.textContent = btn.label;
-            button.style.cssText = `
-                grid-area: ${btn.pos};
-                font-size: 24px;
-                background: rgba(255, 255, 255, 0.8);
-                border: 2px solid #667eea;
-                border-radius: 10px;
-                cursor: pointer;
-                user-select: none;
-            `;
-
-            button.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if (game && !game.is_game_over()) {
-                    game.handle_key_down(btn.dir === 'up' ? 'w' : 
-                                       btn.dir === 'down' ? 's' :
-                                       btn.dir === 'left' ? 'a' : 'd');
-                }
-            });
-
-            button.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                if (game && !game.is_game_over()) {
-                    game.handle_key_up(btn.dir === 'up' ? 'w' : 
-                                      btn.dir === 'down' ? 's' :
-                                      btn.dir === 'left' ? 'a' : 'd');
-                }
-            });
-
-            controlsDiv.appendChild(button);
-        });
-
-        // Rotate button
-        const rotateBtn = document.createElement('button');
-        rotateBtn.textContent = '🔄';
-        rotateBtn.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 80px;
-            height: 80px;
-            font-size: 32px;
-            background: rgba(255, 221, 0, 0.9);
-            border: 3px solid #cc9900;
-            border-radius: 50%;
-            cursor: pointer;
-            user-select: none;
-            z-index: 1000;
-        `;
-
-        rotateBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (game && !game.is_game_over()) {
-                game.handle_key_down(' ');
-            }
-        });
-
-        document.body.appendChild(controlsDiv);
-        document.body.appendChild(rotateBtn);
-
-        // Show controls only on touch devices
-        if ('ontouchstart' in window) {
-            controlsDiv.style.display = 'grid';
-            rotateBtn.style.display = 'block';
-        } else {
-            controlsDiv.style.display = 'none';
-            rotateBtn.style.display = 'none';
-        }
-    };
-
-    createTouchControls();
 
     // Start button
     startButton.addEventListener('click', () => {

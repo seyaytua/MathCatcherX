@@ -60,71 +60,59 @@ impl NumberObject {
         Ok(())
     }
 
-    pub fn generate_for_problem(problem: &MathProblem, width: f64, height: f64) -> Vec<NumberObject> {
+    pub fn generate_in_grid(problem: &MathProblem, width: f64, height: f64) -> Vec<NumberObject> {
         let mut numbers = Vec::new();
         let mut rng = rand::thread_rng();
-        let margin = 80.0;
-        let min_distance = 90.0;
-
-        // Helper function to check if position is valid
-        let is_valid_position = |x: f64, y: f64, existing: &Vec<NumberObject>| -> bool {
-            for num in existing {
-                let dx = x - num.x;
-                let dy = y - num.y;
-                let dist = (dx * dx + dy * dy).sqrt();
-                if dist < min_distance {
-                    return false;
-                }
-            }
-            true
-        };
-
+        
+        // Calculate grid layout
+        let cols = 5;
+        let rows = 4;
+        let cell_width = width / cols as f64;
+        let cell_height = (height - 120.0) / rows as f64; // Leave space for UI at top
+        let start_y = 120.0;
+        
+        // Collect all numbers to display (correct + incorrect)
+        let mut all_values = Vec::new();
+        
         // Add correct answers
         for &answer in &problem.correct_answers {
-            let mut attempts = 0;
-            loop {
-                let x = rng.gen::<f64>() * (width - 2.0 * margin) + margin;
-                let y = rng.gen::<f64>() * (height - 2.0 * margin) + margin;
-                
-                if is_valid_position(x, y, &numbers) {
-                    numbers.push(NumberObject::new(x, y, answer, true));
-                    break;
-                }
-                
-                attempts += 1;
-                if attempts > 100 {
-                    // Fallback: just place it somewhere
-                    numbers.push(NumberObject::new(x, y, answer, true));
-                    break;
-                }
-            }
+            all_values.push((answer, true));
         }
-
-        // Add some incorrect numbers
-        let incorrect_count = 10;
-        for _ in 0..incorrect_count {
+        
+        // Add incorrect numbers
+        let mut attempts = 0;
+        while all_values.len() < (cols * rows) && attempts < 100 {
             let value = rng.gen_range(1..50);
             
-            // Make sure it's not a correct answer
-            if !problem.correct_answers.contains(&value) {
-                let mut attempts = 0;
-                loop {
-                    let x = rng.gen::<f64>() * (width - 2.0 * margin) + margin;
-                    let y = rng.gen::<f64>() * (height - 2.0 * margin) + margin;
-                    
-                    if is_valid_position(x, y, &numbers) {
-                        numbers.push(NumberObject::new(x, y, value, false));
-                        break;
-                    }
-                    
-                    attempts += 1;
-                    if attempts > 100 {
-                        break; // Skip this number if can't find valid position
-                    }
-                }
+            // Make sure it's not already in the list
+            if !all_values.iter().any(|(v, _)| *v == value) {
+                all_values.push((value, false));
             }
+            attempts += 1;
         }
-
+        
+        // Shuffle the numbers
+        use rand::seq::SliceRandom;
+        all_values.shuffle(&mut rng);
+        
+        // Place numbers in grid
+        for (i, (value, is_correct)) in all_values.iter().enumerate().take(cols * rows) {
+            let col = i % cols;
+            let row = i / cols;
+            
+            let x = (col as f64 + 0.5) * cell_width;
+            let y = start_y + (row as f64 + 0.5) * cell_height;
+            
+            numbers.push(NumberObject::new(x, y, *value, *is_correct));
+        }
+        
         numbers
+    }
+
+    pub fn is_clicked(&self, click_x: f64, click_y: f64) -> bool {
+        let dx = click_x - self.x;
+        let dy = click_y - self.y;
+        let distance = (dx * dx + dy * dy).sqrt();
+        distance <= self.radius
     }
 }
