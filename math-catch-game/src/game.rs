@@ -24,7 +24,7 @@ impl Game {
         
         // Always use divisors problem
         let problem = MathProblem::new(ProblemType::Divisors);
-        let numbers = NumberObject::generate_in_grid(&problem, width, height, problem.target_number);
+        let numbers = NumberObject::generate_in_grid(&problem, width, height);
         
         Ok(Game {
             canvas,
@@ -85,7 +85,7 @@ impl Game {
             let width = self.canvas.width() as f64;
             let height = self.canvas.height() as f64;
             self.problem = MathProblem::new(ProblemType::Divisors);
-            self.numbers = NumberObject::generate_in_grid(&self.problem, width, height, self.problem.target_number);
+            self.numbers = NumberObject::generate_in_grid(&self.problem, width, height);
             self.score += 200; // Bonus for completing problem
             
             // Heal player
@@ -141,10 +141,34 @@ impl Game {
     }
 
     fn draw_ui(&self, width: f64, height: f64) -> Result<(), JsValue> {
-        // Draw HP bar
-        let hp_bar_width = 200.0;
+        // Draw large target number in center top
+        self.context.set_fill_style(&JsValue::from_str("#ffffff"));
+        self.context.set_font("bold 72px Arial");
+        self.context.set_text_align("center");
+        self.context.set_text_baseline("top");
+        let target_text = format!("{}", self.problem.target_number);
+        self.context.fill_text(&target_text, width / 2.0, 20.0)?;
+
+        // Draw problem description below the number
+        self.context.set_font("bold 20px Arial");
+        self.context.set_text_align("center");
+        let problem_text = self.problem.get_description();
+        self.context.fill_text(&problem_text, width / 2.0, 105.0)?;
+
+        // Draw score (left side)
+        self.context.set_text_align("left");
+        self.context.set_font("bold 20px Arial");
+        let score_text = format!("Score: {}", self.score);
+        self.context.fill_text(&score_text, 10.0, 20.0)?;
+
+        // Draw time (left side)
+        let time_text = format!("Time: {:.1}s", self.time_remaining);
+        self.context.fill_text(&time_text, 10.0, 50.0)?;
+
+        // Draw HP bar (right side)
+        let hp_bar_width = 150.0;
         let hp_bar_height = 20.0;
-        let hp_bar_x = width - hp_bar_width - 20.0;
+        let hp_bar_x = width - hp_bar_width - 10.0;
         let hp_bar_y = 20.0;
         
         // HP bar background
@@ -170,24 +194,10 @@ impl Game {
         
         // HP text
         self.context.set_fill_style(&JsValue::from_str("#ffffff"));
-        self.context.set_font("bold 16px Arial");
+        self.context.set_font("bold 14px Arial");
+        self.context.set_text_align("center");
         let hp_text = format!("HP: {:.0}%", (self.hp / self.max_hp * 100.0));
-        self.context.fill_text(&hp_text, hp_bar_x + hp_bar_width / 2.0 - 30.0, hp_bar_y + 15.0)?;
-
-        // Draw problem description
-        self.context.set_fill_style(&JsValue::from_str("#ffffff"));
-        self.context.set_font("bold 24px Arial");
-        let problem_text = self.problem.get_description();
-        self.context.fill_text(&problem_text, 10.0, 35.0)?;
-
-        // Draw score
-        self.context.set_font("bold 24px Arial");
-        let score_text = format!("Score: {}", self.score);
-        self.context.fill_text(&score_text, 10.0, 65.0)?;
-
-        // Draw time
-        let time_text = format!("Time: {:.1}s", self.time_remaining);
-        self.context.fill_text(&time_text, 10.0, 95.0)?;
+        self.context.fill_text(&hp_text, hp_bar_x + hp_bar_width / 2.0, hp_bar_y + 15.0)?;
 
         // Draw game over
         if self.game_over {
